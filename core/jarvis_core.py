@@ -1,28 +1,20 @@
 import requests
+from conversation_manager import ConversationManager
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
 MODEL = "llama3.2:latest"
 
-SYSTEM_PROMPT = """
-You are JARVIS.
+with open("Prompts/system_prompt.txt","r", encoding="utf-8") as file:
+    SYSTEM_PROMPT = file.read()
 
-You are the personal AI assistant of Ashish.
-
-You are calm, intelligent, concise and helpful.
-
-You remember the current conversation during runtime.
-
-You explain things clearly and avoid unnecessary complexity.
-"""
-
-conversation_history = []
+conversation_manager = ConversationManager()
 
 
 def chat(user_message):
-    conversation_history.append(
-        {"role": "user", "content": user_message}
-    )
+    conversation_manager.add_user_message(
+    user_message
+  )
 
     payload = {
         "model": MODEL,
@@ -31,7 +23,7 @@ def chat(user_message):
                 "role": "system",
                 "content": SYSTEM_PROMPT
             }
-        ] + conversation_history,
+        ] + conversation_manager.get_history(),
         "stream": False
     }
 
@@ -45,8 +37,8 @@ def chat(user_message):
 
     reply = response.json()["message"]["content"]
 
-    conversation_history.append(
-        {"role": "assistant", "content": reply}
+    conversation_manager.add_assistant_message(
+       reply
     )
 
     return reply
