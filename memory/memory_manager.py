@@ -1,5 +1,6 @@
 from memory.sqlite_store import SQLiteStore
 from memory.chroma_store import ChromaStore
+from memory.storage_policy import StoragePolicy
 
 
 class MemoryManager:
@@ -7,33 +8,33 @@ class MemoryManager:
     Coordinates all memory operations.
 
     Responsibilities:
-    - Save structured memory to SQLite.
-    - Save semantic memory to Chroma.
-    - Keep both databases synchronized.
+    - Decide whether a memory should be stored.
+    - Categorize memories.
+    - Store structured memory in SQLite.
+    - Store semantic memory in Chroma.
     """
 
     def __init__(self):
         self.sqlite_store = SQLiteStore()
         self.chroma_store = ChromaStore()
+        self.storage_policy = StoragePolicy()
 
-    def store_memory(self, content: str, category: str = "general") -> int:
+    def store_memory(self, content: str):
         """
-        Store a memory in both SQLite and Chroma.
-
-        Flow:
-            1. Save memory in SQLite.
-            2. Get generated memory ID.
-            3. Save the same memory in Chroma.
-            4. Return memory ID.
+        Stores a memory if the storage policy approves it.
+        Returns the memory ID if stored, otherwise None.
         """
 
-        # Step 1: Store in SQLite
+        if not self.storage_policy.should_store(content):
+            return None
+
+        category = self.storage_policy.categorize(content)
+
         memory_id = self.sqlite_store.add_memory(
             content=content,
             category=category
         )
 
-        # Step 2: Store in Chroma
         self.chroma_store.add_memory(
             memory_id=str(memory_id),
             text=content,
@@ -43,17 +44,3 @@ class MemoryManager:
         )
 
         return memory_id
-
-    def get_all_memories(self):
-        """
-        Return every memory stored in SQLite.
-        """
-
-        return self.sqlite_store.get_all_memories()
-
-    def close(self):
-        """
-        Close database connections.
-        """
-
-        self.sqlite_store.close()
