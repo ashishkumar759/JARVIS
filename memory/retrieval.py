@@ -25,13 +25,14 @@ class MemoryRetriever:
     Handles semantic retrieval of memories.
     """
 
-    def __init__(self):
-        self.embedding_service = EmbeddingService()
+    def __init__(self, embedding_service):
+        self.embedding_service = embedding_service
+
+        self.sqlite_store = SQLiteStore()
 
         self.chroma_store = ChromaStore(
             embedding_service=self.embedding_service
         )
-        self.sqlite_store = SQLiteStore()
 
     def search(self, query: str, top_k: int = 5):
         """

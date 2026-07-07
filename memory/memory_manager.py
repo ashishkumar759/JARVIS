@@ -15,13 +15,15 @@ class MemoryManager:
     - Store semantic memory in Chroma.
     """
 
-    def __init__(self):
+    def __init__(self, embedding_service):
+        self.embedding_service = embedding_service
+
         self.sqlite_store = SQLiteStore()
-        self.embedding_service = EmbeddingService()
 
         self.chroma_store = ChromaStore(
             embedding_service=self.embedding_service
         )
+
         self.storage_policy = StoragePolicy()
 
     def store_memory(self, content: str):

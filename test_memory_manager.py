@@ -1,6 +1,11 @@
+from memory.embedding_service import EmbeddingService
 from memory.memory_manager import MemoryManager
 
-manager = MemoryManager()
+embedding_service = EmbeddingService()
+
+manager = MemoryManager(
+    embedding_service=embedding_service
+)
 
 messages = [
     "Hello!",

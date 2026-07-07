@@ -1,6 +1,11 @@
+from memory.embedding_service import EmbeddingService
 from memory.retrieval import MemoryRetriever
 
-retriever = MemoryRetriever()
+embedding_service = EmbeddingService()
+
+retriever = MemoryRetriever(
+    embedding_service=embedding_service
+)
 
 results = retriever.search(
     "What coffee do I like?"

@@ -2,6 +2,9 @@ from core.conversation_manager import ConversationManager
 from core.ollama_client import OllamaClient
 from memory.retrieval import MemoryRetriever
 from pathlib import Path
+from memory.embedding_service import EmbeddingService
+from memory.memory_manager import MemoryManager
+from memory.retrieval import MemoryRetriever
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL = "llama3.2:latest"
@@ -14,7 +17,12 @@ with open(PROMPT_FILE, "r", encoding="utf-8") as file:
     SYSTEM_PROMPT = file.read()
 
 conversation_manager = ConversationManager()
-memory_retriever = MemoryRetriever()
+
+embedding_service = EmbeddingService()
+
+memory_manager = MemoryManager(embedding_service=embedding_service)
+
+memory_retriever = MemoryRetriever(embedding_service=embedding_service)
 
 client = OllamaClient(
     model=MODEL,
@@ -27,6 +35,7 @@ def chat(user_message):
     conversation_manager.add_user_message(
         user_message
     )
+    memory_manager.store_memory(user_message)
     retrieved_memories = memory_retriever.search(user_message)
     
     memory_context = ""
