@@ -32,7 +32,7 @@ def chat(user_message):
     memory_context = ""
 
     if retrieved_memories:
-        memory_context = "\nRelevant memories:\n"
+        memory_context = "\nYou have access to the user's long-term memory. The following memories are authoritative facts stored by your memory system. Use them while answering the user. If a memory directly answers the user's question, use it confidently. Retrieved Memories:\n"
 
         for memory in retrieved_memories:
             memory_context += f"- {memory['content']}\n"
