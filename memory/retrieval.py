@@ -17,6 +17,7 @@ Return Complete Memory Records
 
 from memory.chroma_store import ChromaStore
 from memory.sqlite_store import SQLiteStore
+from memory.embedding_service import EmbeddingService
 
 
 class MemoryRetriever:
@@ -25,7 +26,11 @@ class MemoryRetriever:
     """
 
     def __init__(self):
-        self.chroma_store = ChromaStore()
+        self.embedding_service = EmbeddingService()
+
+        self.chroma_store = ChromaStore(
+            embedding_service=self.embedding_service
+        )
         self.sqlite_store = SQLiteStore()
 
     def search(self, query: str, top_k: int = 5):

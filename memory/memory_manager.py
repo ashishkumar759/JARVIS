@@ -1,6 +1,7 @@
 from memory.sqlite_store import SQLiteStore
 from memory.chroma_store import ChromaStore
 from memory.storage_policy import StoragePolicy
+from memory.embedding_service import EmbeddingService
 
 
 class MemoryManager:
@@ -16,7 +17,11 @@ class MemoryManager:
 
     def __init__(self):
         self.sqlite_store = SQLiteStore()
-        self.chroma_store = ChromaStore()
+        self.embedding_service = EmbeddingService()
+
+        self.chroma_store = ChromaStore(
+            embedding_service=self.embedding_service
+        )
         self.storage_policy = StoragePolicy()
 
     def store_memory(self, content: str):

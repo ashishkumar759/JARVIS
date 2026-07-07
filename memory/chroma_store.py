@@ -14,12 +14,19 @@ class ChromaStore:
     - Return clean search results
     """
 
-    def __init__(self, db_path="memory/chroma_db"):
+
+    def __init__(
+        self,
+        embedding_service,
+        db_path="memory/chroma_db"
+    ):
         Path(db_path).mkdir(parents=True, exist_ok=True)
 
-        self.client = chromadb.PersistentClient(path=db_path)
+        self.client = chromadb.PersistentClient(
+            path=db_path
+        )
 
-        self.embedding_service = EmbeddingService()
+        self.embedding_service = embedding_service
 
         self.collection = self.client.get_or_create_collection(
             name="jarvis_memory"
