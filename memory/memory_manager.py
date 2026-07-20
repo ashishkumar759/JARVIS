@@ -10,6 +10,7 @@ class MemoryManager:
 
     Responsibilities:
     - Decide whether a memory should be stored.
+    - Detect duplicate memories.
     - Categorize memories.
     - Store structured memory in SQLite.
     - Store semantic memory in Chroma.
@@ -40,9 +41,14 @@ class MemoryManager:
         fact = classification["fact"]
         category = classification["category"]
 
+        # Prevent duplicate memories
+        if self.sqlite_store.memory_exists(fact):
+            print("Memory already exists. Skipping storage.")
+            return None
+
         memory_id = self.sqlite_store.add_memory(
-           content=fact,
-           category=category
+            content=fact,
+            category=category
         )
 
         self.chroma_store.add_memory(
@@ -52,4 +58,6 @@ class MemoryManager:
                 "category": category
             }
         )
+
         return memory_id
+    

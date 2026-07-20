@@ -30,7 +30,22 @@ class SQLiteStore:
         """, (content, category))
         self.conn.commit()
 
-        return self.cursor.lastrowid 
+        return self.cursor.lastrowid
+
+    def memory_exists(self, content: str) -> bool:
+        """
+        Returns True if an identical memory already exists.
+        Comparison is case-insensitive.
+        """
+
+        self.cursor.execute("""
+        SELECT 1
+        FROM memories
+        WHERE LOWER(content) = LOWER(?)
+        LIMIT 1
+        """, (content,))
+
+        return self.cursor.fetchone() is not None
 
     def get_all_memories(self):
         self.cursor.execute("""
@@ -39,7 +54,7 @@ class SQLiteStore:
         ORDER BY created_at DESC
         """)
         return self.cursor.fetchall()
-    
+
     def get_memory(self, memory_id):
         self.cursor.execute("""
             SELECT id, content, category, created_at
