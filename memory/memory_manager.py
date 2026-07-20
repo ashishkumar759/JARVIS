@@ -15,7 +15,7 @@ class MemoryManager:
     - Store semantic memory in Chroma.
     """
 
-    def __init__(self, embedding_service):
+    def __init__(self, embedding_service, client):
         self.embedding_service = embedding_service
 
         self.sqlite_store = SQLiteStore()
@@ -24,7 +24,7 @@ class MemoryManager:
             embedding_service=self.embedding_service
         )
 
-        self.storage_policy = StoragePolicy()
+        self.storage_policy = StoragePolicy(client)
 
     def store_memory(self, content: str):
         """
@@ -32,22 +32,24 @@ class MemoryManager:
         Returns the memory ID if stored, otherwise None.
         """
 
-        if not self.storage_policy.should_store(content):
+        classification = self.storage_policy.classify(content)
+
+        if not classification["should_store"]:
             return None
 
-        category = self.storage_policy.categorize(content)
+        fact = classification["fact"]
+        category = classification["category"]
 
         memory_id = self.sqlite_store.add_memory(
-            content=content,
-            category=category
+           content=fact,
+           category=category
         )
 
         self.chroma_store.add_memory(
             memory_id=str(memory_id),
-            text=content,
+            text=fact,
             metadata={
                 "category": category
             }
         )
-
         return memory_id

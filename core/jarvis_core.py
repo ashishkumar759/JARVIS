@@ -4,7 +4,6 @@ from memory.retrieval import MemoryRetriever
 from pathlib import Path
 from memory.embedding_service import EmbeddingService
 from memory.memory_manager import MemoryManager
-from memory.retrieval import MemoryRetriever
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL = "llama3.2:latest"
@@ -20,14 +19,14 @@ conversation_manager = ConversationManager()
 
 embedding_service = EmbeddingService()
 
-memory_manager = MemoryManager(embedding_service=embedding_service)
-
-memory_retriever = MemoryRetriever(embedding_service=embedding_service)
-
 client = OllamaClient(
     model=MODEL,
     url=OLLAMA_URL
 )
+
+memory_manager = MemoryManager(embedding_service=embedding_service, client = client)
+
+memory_retriever = MemoryRetriever(embedding_service=embedding_service)
 
 
 def chat(user_message):
