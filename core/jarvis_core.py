@@ -1,89 +1,39 @@
-from core.conversation_manager import ConversationManager
-from core.ollama_client import OllamaClient
-from memory.retrieval import MemoryRetriever
-from pathlib import Path
-from memory.embedding_service import EmbeddingService
-from memory.memory_manager import MemoryManager
-
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "llama3.2:latest"
+from core.jarvis_engine import JarvisEngine
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-PROMPT_FILE = BASE_DIR / "prompts" / "system_prompt.txt"
+def main():
 
-with open(PROMPT_FILE, "r", encoding="utf-8") as file:
-    SYSTEM_PROMPT = file.read()
+    engine = JarvisEngine()
 
-conversation_manager = ConversationManager()
+    print("JARVIS Online")
+    print("Type 'quit' to exit.")
+    print()
 
-embedding_service = EmbeddingService()
+    while True:
 
-client = OllamaClient(
-    model=MODEL,
-    url=OLLAMA_URL
-)
+        user_input = input("You: ").strip()
 
-memory_manager = MemoryManager(embedding_service=embedding_service, client = client)
+        if user_input.lower() == "quit":
+            print("JARVIS: Goodbye Ashish.")
+            break
 
-memory_retriever = MemoryRetriever(embedding_service=embedding_service)
+        if not user_input:
+            continue
 
+        try:
 
-def chat(user_message):
+            answer = engine.chat(user_input)
 
-    conversation_manager.add_user_message(
-        user_message
-    )
-    memory_manager.store_memory(user_message)
-    retrieved_memories = memory_retriever.search(user_message)
-    
-    memory_context = ""
+            print()
+            print("JARVIS:", answer)
+            print()
 
-    if retrieved_memories:
-        memory_context = "\nYou have access to the user's long-term memory. The following memories are authoritative facts stored by your memory system. Use them while answering the user. If a memory directly answers the user's question, use it confidently. Retrieved Memories:\n"
+        except Exception as e:
 
-        for memory in retrieved_memories:
-            memory_context += f"- {memory['content']}\n"
-
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT + memory_context
-        }
-    ] + conversation_manager.get_history()
-
-    reply = client.chat(messages)
-
-    conversation_manager.add_assistant_message(
-        reply
-    )
-
-    return reply
+            print()
+            print("ERROR:", e)
+            print()
 
 
-print("JARVIS Online")
-print("Type 'quit' to exit.")
-print()
-
-while True:
-
-    user_input = input("You: ").strip()
-
-    if user_input.lower() == "quit":
-        print("JARVIS: Goodbye Ashish.")
-        break
-
-    if not user_input:
-        continue
-
-    try:
-        answer = chat(user_input)
-
-        print()
-        print("JARVIS:", answer)
-        print()
-
-    except Exception as e:
-        print()
-        print("ERROR:", e)
-        print()
+if __name__ == "__main__":
+    main()
