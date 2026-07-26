@@ -73,9 +73,12 @@ class ChatPage(QWidget):
         # Clear input immediately
         self.message_input.clear()
 
+        self.send_button.setEnabled(False)
+        self.message_input.setEnabled(False)
+
         try:
             # Get response from JARVIS
-            reply = self.engine.chat(message)
+            reply = self.engine.send_message(message)
 
             # Show JARVIS response
             self.append_message("JARVIS", reply)
@@ -86,6 +89,14 @@ class ChatPage(QWidget):
                 "System",
                 f"ERROR: {str(e)}"
             )
+
+        finally:
+             # Re-enable UI
+            self.send_button.setEnabled(True)
+            self.message_input.setEnabled(True)
+
+            # Put cursor back in input
+            self.message_input.setFocus()
 
     def append_message(self, sender, message):
 

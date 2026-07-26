@@ -1,9 +1,11 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QLabel,
     QTextEdit,
-    QPushButton
+    QPushButton,
+    QMessageBox
 )
 
 
@@ -19,30 +21,74 @@ class JournalPage(QWidget):
     def setup_ui(self):
 
         layout = QVBoxLayout(self)
-
-        layout.setContentsMargins(30, 25, 30, 25)
         layout.setSpacing(15)
 
-        title = QLabel("📓 Daily Journal")
-        title.setObjectName("title")
-
-        subtitle = QLabel(
-            "Write about your day. JARVIS will remember what matters."
-        )
-        subtitle.setObjectName("subtitle")
+        title = QLabel("Daily Journal")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("""
+            font-size:24px;
+            font-weight:bold;
+        """)
 
         self.journal_editor = QTextEdit()
-
         self.journal_editor.setPlaceholderText(
-            "What happened today?"
+            "Write today's journal here..."
         )
 
         self.save_button = QPushButton(
             "Save Journal"
         )
 
+        self.save_button.clicked.connect(
+            self.save_journal
+        )
+
         layout.addWidget(title)
-        layout.addWidget(subtitle)
-        layout.addSpacing(10)
         layout.addWidget(self.journal_editor)
         layout.addWidget(self.save_button)
+
+    # ==========================================================
+    # Save Journal
+    # ==========================================================
+
+    def save_journal(self):
+
+        journal_text = (
+            self.journal_editor
+            .toPlainText()
+            .strip()
+        )
+
+        if not journal_text:
+
+            QMessageBox.information(
+                self,
+                "Empty Journal",
+                "Please write something first."
+            )
+
+            return
+
+        try:
+
+            success = self.engine.save_journal(
+                journal_text
+            )
+
+            if success:
+
+                QMessageBox.information(
+                    self,
+                    "Journal Saved",
+                    "Your journal has been saved successfully."
+                )
+
+                self.journal_editor.clear()
+
+        except Exception as e:
+
+            QMessageBox.critical(
+                self,
+                "Error",
+                str(e)
+            )

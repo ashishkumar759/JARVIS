@@ -1,10 +1,8 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QLabel,
-    QComboBox,
-    QPushButton,
-    QGroupBox,
     QFormLayout
 )
 
@@ -17,73 +15,59 @@ class SettingsPage(QWidget):
         self.engine = engine
 
         self.setup_ui()
+        self.load_settings()
 
     def setup_ui(self):
 
-        main_layout = QVBoxLayout(self)
+        layout = QVBoxLayout(self)
+        layout.setSpacing(20)
 
-        main_layout.setContentsMargins(30, 25, 30, 25)
-        main_layout.setSpacing(20)
+        title = QLabel("Settings")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("""
+            font-size:24px;
+            font-weight:bold;
+        """)
 
-        title = QLabel("⚙ Settings")
-        title.setObjectName("title")
+        layout.addWidget(title)
 
-        subtitle = QLabel(
-            "Configure your JARVIS experience."
-        )
-        subtitle.setObjectName("subtitle")
+        self.form = QFormLayout()
 
-        main_layout.addWidget(title)
-        main_layout.addWidget(subtitle)
+        self.model_label = QLabel()
+        self.embedding_label = QLabel()
+        self.memory_label = QLabel()
+        self.backend_label = QLabel()
+        self.status_label = QLabel()
 
-        # ---------------- AI Settings ---------------- #
+        self.form.addRow("Model:", self.model_label)
+        self.form.addRow("Embedding Model:", self.embedding_label)
+        self.form.addRow("Memory Backend:", self.memory_label)
+        self.form.addRow("LLM Backend:", self.backend_label)
+        self.form.addRow("Status:", self.status_label)
 
-        ai_group = QGroupBox("AI Configuration")
+        layout.addLayout(self.form)
+        layout.addStretch()
 
-        ai_layout = QFormLayout(ai_group)
+    def load_settings(self):
 
-        self.model_combo = QComboBox()
-        self.model_combo.addItems([
-            "llama3.2:latest"
-        ])
+        settings = self.engine.get_settings()
 
-        ai_layout.addRow("Model:", self.model_combo)
-
-        # ---------------- Theme ---------------- #
-
-        theme_group = QGroupBox("Appearance")
-
-        theme_layout = QFormLayout(theme_group)
-
-        self.theme_combo = QComboBox()
-
-        self.theme_combo.addItems([
-            "Dark"
-        ])
-
-        theme_layout.addRow("Theme:", self.theme_combo)
-
-        # ---------------- Info ---------------- #
-
-        info_group = QGroupBox("Application")
-
-        info_layout = QFormLayout(info_group)
-
-        version = QLabel("JARVIS v2")
-
-        info_layout.addRow("Version:", version)
-
-        # ---------------- Save ---------------- #
-
-        self.save_button = QPushButton(
-            "Save Settings"
+        self.model_label.setText(
+            settings["model"]
         )
 
-        main_layout.addSpacing(10)
-        main_layout.addWidget(ai_group)
-        main_layout.addWidget(theme_group)
-        main_layout.addWidget(info_group)
+        self.embedding_label.setText(
+            settings["embedding_model"]
+        )
 
-        main_layout.addStretch()
+        self.memory_label.setText(
+            settings["memory_backend"]
+        )
 
-        main_layout.addWidget(self.save_button)
+        self.backend_label.setText(
+            settings["llm_backend"]
+        )
+
+        self.status_label.setText(
+            "🟢 " + settings["status"]
+        )
