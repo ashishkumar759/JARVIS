@@ -17,6 +17,7 @@ class MemoryPage(QWidget):
 
         self.setup_ui()
         self.load_memories()
+        self.engine.memory_updated.connect(self.load_memories)
 
     def setup_ui(self):
 

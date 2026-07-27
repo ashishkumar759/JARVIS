@@ -15,6 +15,7 @@ VALID_CATEGORIES = {
             "device",
             "reminder",
             "general"
+            "journal"
         }
 
  

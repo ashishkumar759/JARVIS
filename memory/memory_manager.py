@@ -36,6 +36,7 @@ class MemoryManager:
         classification = self.storage_policy.classify(content)
 
         if not classification["should_store"]:
+            print("Memory rejected:", content)
             return None
 
         fact = classification["fact"]
@@ -60,4 +61,47 @@ class MemoryManager:
         )
 
         return memory_id
-    
+
+
+
+
+
+    def store_journal(self, content: str):
+            """
+            Stores a journal entry explicitly.
+
+            Unlike normal conversation memories, journal entries are
+            intentionally saved by the user, so they bypass the
+            StoragePolicy classifier.
+
+            Returns:
+            memory_id if stored successfully.
+            None if the journal already exists.
+            """
+
+            content = content.strip()
+
+            if not content:
+                return None
+
+        # Prevent duplicate journal entries
+            if self.sqlite_store.memory_exists(content):
+                print("Journal already exists. Skipping storage.")
+                return None
+
+        # Store in SQLite
+            memory_id = self.sqlite_store.add_memory(
+                content=content,
+                category="journal"
+            )
+
+        # Store embedding in Chroma
+            self.chroma_store.add_memory(
+                memory_id=str(memory_id),
+                text=content,
+                metadata={
+                    "category": "journal"
+                }
+            )
+
+            return memory_id

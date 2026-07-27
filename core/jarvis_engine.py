@@ -6,9 +6,11 @@ from core.ollama_client import OllamaClient
 from memory.embedding_service import EmbeddingService
 from memory.memory_manager import MemoryManager
 from memory.retrieval import MemoryRetriever
+from PySide6.QtCore import QObject, Signal
 
 
-class JarvisEngine:
+
+class JarvisEngine(QObject):
     """
     Single interface between the UI and the JARVIS backend.
 
@@ -20,12 +22,19 @@ class JarvisEngine:
         - SQLiteStore
         - ChromaStore
     """
+    memory_updated = Signal()
+
+
 
     def __init__(
         self,
         model="llama3.2:latest",
         url="http://localhost:11434/api/chat"
     ):
+
+        super().__init__()
+
+        self.conversation_manager = ConversationManager()
 
         # -----------------------------
         # Core Components
@@ -130,11 +139,14 @@ class JarvisEngine:
         if not journal_text:
             return False
 
-        self.memory_manager.store_memory(
+        memory_id = self.memory_manager.store_journal(
             journal_text
         )
+        if memory_id is not None:
+            self.memory_updated.emit()
+            return True 
 
-        return True
+        return False 
 
 
     def chat(self, user_message):

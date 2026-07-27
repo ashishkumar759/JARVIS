@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QPushButton
 )
 
+from ui.workers.chat_worker import ChatWorker
+
 
 class ChatPage(QWidget):
 
@@ -15,6 +17,7 @@ class ChatPage(QWidget):
         super().__init__()
 
         self.engine = engine
+        self.worker = None
 
         self.setup_ui()
 
@@ -47,9 +50,13 @@ class ChatPage(QWidget):
 
         self.send_button = QPushButton("Send")
 
-        # Connect signals
-        self.send_button.clicked.connect(self.send_message)
-        self.message_input.returnPressed.connect(self.send_message)
+        self.send_button.clicked.connect(
+            self.send_message
+        )
+
+        self.message_input.returnPressed.connect(
+            self.send_message
+        )
 
         bottom_layout.addWidget(self.message_input)
         bottom_layout.addWidget(self.send_button)
@@ -60,6 +67,10 @@ class ChatPage(QWidget):
         main_layout.addWidget(self.chat_history)
         main_layout.addLayout(bottom_layout)
 
+    # ==========================================================
+    # Send Message
+    # ==========================================================
+
     def send_message(self):
 
         message = self.message_input.text().strip()
@@ -67,36 +78,64 @@ class ChatPage(QWidget):
         if not message:
             return
 
-        # Show user's message
-        self.append_message("You", message)
+        self.append_message(
+            "You",
+            message
+        )
 
-        # Clear input immediately
         self.message_input.clear()
 
         self.send_button.setEnabled(False)
         self.message_input.setEnabled(False)
 
-        try:
-            # Get response from JARVIS
-            reply = self.engine.send_message(message)
+        self.worker = ChatWorker(
+            self.engine,
+            message
+        )
 
-            # Show JARVIS response
-            self.append_message("JARVIS", reply)
+        self.worker.finished.connect(
+            self.on_reply_received
+        )
 
-        except Exception as e:
+        self.worker.error.connect(
+            self.on_error
+        )
 
-            self.append_message(
-                "System",
-                f"ERROR: {str(e)}"
-            )
+        self.worker.start()
 
-        finally:
-             # Re-enable UI
-            self.send_button.setEnabled(True)
-            self.message_input.setEnabled(True)
+    # ==========================================================
+    # Worker Callbacks
+    # ==========================================================
 
-            # Put cursor back in input
-            self.message_input.setFocus()
+    def on_reply_received(self, reply):
+
+        self.append_message(
+            "JARVIS",
+            reply
+        )
+
+        self.send_button.setEnabled(True)
+        self.message_input.setEnabled(True)
+        self.message_input.setFocus()
+
+        self.worker = None
+
+    def on_error(self, error):
+
+        self.append_message(
+            "System",
+            f"ERROR: {error}"
+        )
+
+        self.send_button.setEnabled(True)
+        self.message_input.setEnabled(True)
+        self.message_input.setFocus()
+
+        self.worker = None
+
+    # ==========================================================
+    # Chat Display
+    # ==========================================================
 
     def append_message(self, sender, message):
 
@@ -105,4 +144,7 @@ class ChatPage(QWidget):
         )
 
         scrollbar = self.chat_history.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
+
+        scrollbar.setValue(
+            scrollbar.maximum()
+        )
