@@ -10,7 +10,7 @@ class ApplicationLauncher:
     """
 
     @staticmethod
-    def launch(executable: str) -> subprocess.Popen:
+    def launch(executable: str) -> bool:
         """
         Launch an executable.
 
@@ -19,7 +19,16 @@ class ApplicationLauncher:
                 Name or path of the executable.
 
         Returns:
-            subprocess.Popen instance.
+            True if the application was launched successfully,
+            otherwise False.
         """
 
-        return subprocess.Popen([executable])
+        try:
+            subprocess.Popen([executable])
+            return True
+
+        except FileNotFoundError:
+            return False
+
+        except OSError:
+            return False

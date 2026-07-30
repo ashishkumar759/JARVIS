@@ -2,12 +2,9 @@ from tools.application_catalog import ApplicationCatalog
 from tools.application_launcher import ApplicationLauncher
 from tools.base_tool import BaseTool
 from tools.tool_result import ToolResult
-from tools.constants import ToolActions
+from tools.tool_metadata import ToolMetadata
 from tools.tool_validator import ToolValidator
 from tools.constants import ToolActions, ToolErrors
-from tools.tool_metadata import ToolMetadata
-from tools.constants import ToolActions
-
 
 
 class AppLauncher(BaseTool):
@@ -56,34 +53,35 @@ class AppLauncher(BaseTool):
 
         target = parameters["target"]
 
+        # Resolve the executable.
         executable = ApplicationCatalog.get_executable(target)
 
         if executable is None:
             return ToolResult(
                 success=False,
                 message=f"Unknown application '{target}'.",
-                error=ToolErrors.APPLICATION_NOT_FOUND
+                error=ToolErrors.APPLICATION_NOT_FOUND,
             )
 
-        try:
-            process = ApplicationLauncher.launch(executable)
+        # Attempt to launch the application.
+        launched = ApplicationLauncher.launch(executable)
 
+        if launched:
             return ToolResult(
                 success=True,
                 message=f"Opened '{target}'.",
                 data={
                     "target": target,
                     "executable": executable,
-                    "pid": process.pid
-                }
+                },
             )
 
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                message=f"Failed to open '{target}'.",
-                error=ToolErrors.EXECUTION_FAILED,
-                data={
-                    "exception": str(e)
-                }
-            )
+        return ToolResult(
+            success=False,
+            message=f"Failed to open '{target}'.",
+            error=ToolErrors.EXECUTION_FAILED,
+            data={
+                "target": target,
+                "executable": executable,
+            },
+        )

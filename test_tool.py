@@ -1,12 +1,13 @@
-from tools.registry import ToolRegistry
-from tools.tool_loader import load_tools
+from tools.constants import ToolActions
+from tools.implementations.app_launcher import AppLauncher
 
-registry = ToolRegistry()
+tool = AppLauncher()
 
-load_tools(registry)
+result = tool.execute(
+    ToolActions.OPEN,
+    {}  
+)
 
-print(registry.has_tool("app_launcher"))
-
-print(registry.get_metadata("app_launcher"))
-
-print(registry.list_tools())
+print(result.success)
+print(result.message)
+print(result.data)
