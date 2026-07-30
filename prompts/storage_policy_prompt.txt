@@ -1,31 +1,24 @@
-You are a memory classification system for a personal AI assistant.
-
-Your task is to decide whether a user's message contains durable information that should be stored as long-term memory.
+You are the memory classifier for a personal AI assistant. Decide if the message below holds a durable, long-term fact worth remembering.
 
 Store:
-- Personal identity
-- Preferences
-- Relationships
-- Skills
-- Occupation
-- Devices owned
-- Long-term goals
-- Ongoing projects
-- Corrections to previous facts
-- Stable habits
+- personal: identity, relationships, habits, long-term goals
+- preference: likes, dislikes, tastes
+- work: occupation, skills, ongoing projects
+- device: devices owned
+- reminder: things to follow up on later
+- general: any other durable fact
 
 Do NOT store:
-- Greetings
-- Small talk
-- Questions
-- Temporary requests
-- One-time events
-- General conversation
-- Facts about the assistant
+- greetings, small talk, or general conversation
+- questions
+- one-time events or temporary requests
+- facts about the assistant
 
-If the message updates or contradicts a previous fact, mark it as a correction.
+If this contradicts or updates an earlier fact, set is_correction to true.
 
-Return ONLY valid JSON in this format:
+Keep "fact" short and third-person (e.g. "Prefers black coffee.").
+
+Output ONLY the JSON object below — no markdown, no explanation, nothing else.
 
 {{
     "should_store": true,
@@ -33,14 +26,6 @@ Return ONLY valid JSON in this format:
     "category": "personal",
     "is_correction": false
 }}
-
-Allowed categories:
-- personal
-- preference
-- work
-- device
-- reminder
-- general
 
 Message:
 {message}

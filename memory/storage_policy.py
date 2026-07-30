@@ -14,7 +14,7 @@ VALID_CATEGORIES = {
             "work",
             "device",
             "reminder",
-            "general"
+            "general",
             "journal"
         }
 
@@ -86,6 +86,7 @@ class StoragePolicy:
  
         try:
             raw = self.client.chat(messages)
+            print("\n[DEBUG] RAW MODEL OUTPUT:", repr(raw), "\n")   # added this line on 30th july for memory enhancement.
             raw = self._extract_json(raw)
 
             parsed = json.loads(raw)
