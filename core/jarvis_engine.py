@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime 
 
 from core.conversation_manager import ConversationManager
 from core.ollama_client import OllamaClient
@@ -89,6 +90,12 @@ class JarvisEngine(QObject):
             user_message
         )
 
+        time_context = (
+            "\nCurrent date and time: "
+            f"{datetime.now().strftime('%A, %d %B %Y, %I:%M %p')}\n"
+        )
+
+
         memory_context = ""
 
         if retrieved_memories:
@@ -109,7 +116,7 @@ class JarvisEngine(QObject):
         messages = [
             {
                 "role": "system",
-                "content": self.system_prompt + memory_context
+                "content": self.system_prompt + time_context + memory_context
             }
         ] + self.conversation_manager.get_history()
 
