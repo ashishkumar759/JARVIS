@@ -4,6 +4,12 @@ import chromadb
 from memory.embedding_service import EmbeddingService
 
 
+# Anchored to this file's location for the same reason as sqlite_store.py:
+# a relative default path depends on the process's cwd at launch time,
+# which can silently point different app sessions at different DBs.
+BASE_DIR = Path(__file__).resolve().parent
+
+
 class ChromaStore:
     """
     Handles all vector database operations.
@@ -18,12 +24,13 @@ class ChromaStore:
     def __init__(
         self,
         embedding_service,
-        db_path="memory/chroma_db"
+        db_path=None
     ):
-        Path(db_path).mkdir(parents=True, exist_ok=True)
+        db_path = Path(db_path) if db_path else BASE_DIR / "chroma_db"
+        db_path.mkdir(parents=True, exist_ok=True)
 
         self.client = chromadb.PersistentClient(
-            path=db_path
+            path=str(db_path)
         )
 
         self.embedding_service = embedding_service
@@ -43,6 +50,25 @@ class ChromaStore:
         embedding = self.embedding_service.embed(text)
 
         self.collection.add(
+            ids=[str(memory_id)],
+            documents=[text],
+            embeddings=[embedding],
+            metadatas=[metadata]
+        )
+
+    def update_memory(self, memory_id: str, text: str, metadata=None):
+        """
+        Overwrites an existing memory's embedding and text in place.
+        Used together with SQLiteStore.update_memory when the classifier
+        marks a fact as is_correction=True.
+        """
+
+        if metadata is None:
+            metadata = {}
+
+        embedding = self.embedding_service.embed(text)
+
+        self.collection.update(
             ids=[str(memory_id)],
             documents=[text],
             embeddings=[embedding],
