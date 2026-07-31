@@ -1,5 +1,6 @@
 from tools.registry import ToolRegistry
 from tools.implementations.app_launcher import AppLauncher
+from tools.implementations.browser_tool import BrowserTool
 
 # Future imports
 # from tools.implementations.app_launcher import AppLauncher
@@ -14,6 +15,7 @@ def load_tools(registry: ToolRegistry) -> None:
     """
 
     registry.register(AppLauncher())
+    registry.register(BrowserTool())
     # Future registrations:
     #
     # registry.register(AppLauncher())

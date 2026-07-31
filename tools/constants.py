@@ -40,3 +40,4 @@ class ToolErrors:
     EXECUTION_FAILED = "ExecutionFailed"
 
     MISSING_PARAMETER = "MissingParameter"
+    INVALID_PARAMETERS = "InvalidParameters"

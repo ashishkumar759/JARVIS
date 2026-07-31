@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from datetime import datetime 
 
 
 class SQLiteStore:
@@ -37,7 +38,7 @@ class SQLiteStore:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     content TEXT NOT NULL,
                     category TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP 
                 )
             """)
 
@@ -52,6 +53,7 @@ class SQLiteStore:
         content,
         category="general"
     ):
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         with self._get_connection() as conn:
 

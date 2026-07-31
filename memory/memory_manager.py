@@ -2,6 +2,7 @@ from memory.sqlite_store import SQLiteStore
 from memory.chroma_store import ChromaStore
 from memory.storage_policy import StoragePolicy
 from memory.embedding_service import EmbeddingService
+from datetime import datetime  
 
 
 class MemoryManager:
@@ -56,7 +57,8 @@ class MemoryManager:
             memory_id=str(memory_id),
             text=fact,
             metadata={
-                "category": category
+                "category": category,
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
         )
 
@@ -100,7 +102,8 @@ class MemoryManager:
                 memory_id=str(memory_id),
                 text=content,
                 metadata={
-                    "category": "journal"
+                    "category": "journal",
+                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
             )
 
