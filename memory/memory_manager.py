@@ -90,18 +90,25 @@ class MemoryManager:
 
         return True
 
-    def store_memory(self, content: str):
+    def store_memory(self, content: str, history: str = ""):
         """
         Classifies the message and stores every fact that passes both
         the LLM's judgement and the code-level validation in
         StoragePolicy. A single message can contain zero, one, or
         multiple storable facts.
 
+        Args:
+            content: the current user message.
+            history: recent conversation turns as plain text, passed
+                through to the classifier to help it resolve pronouns
+                like "you"/"your" (e.g. a fact about the assistant vs.
+                a fact about the user). Never mined for facts itself.
+
         Returns a list of memory_ids that were newly stored or updated
         (empty list if nothing in the message was worth storing).
         """
 
-        classification = self.storage_policy.classify(content)
+        classification = self.storage_policy.classify(content, history=history)
         facts = classification.get("facts", [])
 
         if not facts:

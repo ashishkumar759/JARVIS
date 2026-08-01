@@ -64,6 +64,15 @@ Output: {{"facts": []}}
 Message: My favorite programming language is Python.
 Output: {{"facts": [{{"content": "The user's favorite programming language is Python.", "category": "preference", "is_correction": false}}]}}
 
+Message: Okay now tell me when is your birthday
+Output: {{"facts": []}}
+
+Message: Also tell me what's your nickname.
+Output: {{"facts": []}}
+
+Message: But i already stated that your birthday is on 31st of july.
+Output: {{"facts": []}}
+
 --- END EXAMPLES ---
 
 Message:

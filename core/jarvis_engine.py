@@ -82,8 +82,20 @@ class JarvisEngine(QObject):
             user_message
         )
 
+        # Last few turns *before* the current message, as plain text,
+        # so the classifier can tell "your birthday" said about the
+        # assistant apart from a fact about the user. This is context
+        # only -- store_memory only ever extracts facts from
+        # `user_message` itself.
+        history_window = self.conversation_manager.get_history()[:-1][-6:]
+        history_text = "\n".join(
+            f"{turn['role'].capitalize()}: {turn['content']}"
+            for turn in history_window
+        )
+
         self.memory_manager.store_memory(
-            user_message
+            user_message,
+            history=history_text
         )
 
         retrieved_memories = self.memory_retriever.search(

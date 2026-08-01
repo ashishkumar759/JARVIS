@@ -26,6 +26,37 @@ VALID_CATEGORIES = {
 REQUIRED_SUBJECT = "the user"
 MIN_FACT_WORDS = 3
 
+# Words/phrases that indicate a fact is describing an absence of
+# information rather than an actual fact (e.g. "The user's birthday is
+# unknown."). Seen in testing: the model will sometimes fabricate a
+# statement like this out of a bare question with zero real content,
+# then mark it as a "correction" that overwrites a correct memory.
+# The prompt tells it not to -- this is the code-level backstop.
+NON_FACT_MARKERS = (
+    "unknown", "unspecified", "not specified", "not mentioned",
+    "not provided", "unclear", "not stated", "not sure", "not certain"
+)
+
+# A message this heuristic identifies as a bare question skips the LLM
+# call entirely and is never classified. This is deterministic and
+# catches cases prompting alone cannot reliably prevent: a small local
+# model asked "don't store questions" will still sometimes invent an
+# answer-shaped "fact" for a question it can't answer (see NON_FACT_MARKERS
+# above for the real example that motivated this).
+QUESTION_STARTERS = {
+    "who", "what", "when", "where", "why", "how",
+    "is", "are", "do", "does", "did", "can", "could",
+    "would", "will", "should", "have", "has"
+}
+
+# If any of these appear in the message, it's treated as carrying real
+# declarative content even if it also reads like a question, so it's
+# still sent to the LLM rather than auto-skipped.
+DECLARATION_OVERRIDE_CUES = (
+    "remember", "actually", "correct", "note that", "fyi",
+    "by the way", "also remember", "my birthday", "i am", "i'm"
+)
+
 
 class StoragePolicy:
     """
@@ -66,13 +97,39 @@ class StoragePolicy:
 
         return text[start:end + 1]
 
+    def _looks_like_bare_question(self, message: str) -> bool:
+        """
+        Deterministic pre-filter: catches bare questions before the LLM
+        ever sees them, so there's nothing for it to hallucinate an
+        answer-shaped "fact" out of. Skipped if the message also carries
+        a clear declarative cue (e.g. "remember", "actually"), since
+        those often mix a real correction into a question-like sentence.
+        """
+        text = message.strip().lower()
+
+        if not text:
+            return False
+
+        if any(cue in text for cue in DECLARATION_OVERRIDE_CUES):
+            return False
+
+        words = text.split()
+        first_word = words[0].strip(",.!?\"'") if words else ""
+
+        ends_with_question_mark = text.endswith("?")
+        starts_like_question = first_word in QUESTION_STARTERS
+
+        return ends_with_question_mark or starts_like_question
+
     def _is_valid_fact(self, content: str) -> bool:
         """
-        Rejects fragments, empty strings, and facts not phrased as
-        statements about the user. This is what catches the model
-        storing a fact about itself, a meta-comment about the chat,
-        or a stripped-context fragment like "Python" — even if the
-        prompt-following fails, this filter still fires.
+        Rejects fragments, empty strings, facts not phrased as
+        statements about the user, and facts that merely describe an
+        absence of information. This is what catches the model storing
+        a fact about itself, a meta-comment about the chat, a
+        stripped-context fragment like "Python", or a fabricated
+        "unknown" statement -- even if prompt-following fails, this
+        filter still fires.
         """
         if not content:
             return False
@@ -83,11 +140,23 @@ class StoragePolicy:
         if not content.lower().startswith(REQUIRED_SUBJECT):
             return False
 
+        lowered = content.lower()
+        if any(marker in lowered for marker in NON_FACT_MARKERS):
+            return False
+
         return True
 
-    def classify(self, message: str) -> dict:
+    def classify(self, message: str, history: str = "") -> dict:
         """
         Runs the LLM classifier on a message.
+
+        Args:
+            message: the current user message to classify.
+            history: recent conversation turns as plain text, used only
+                to help the model resolve pronouns like "you"/"your"
+                (e.g. distinguishing a fact about the assistant from a
+                fact about the user). Never mined for facts itself —
+                only `message` is classified.
 
         Returns a dict:
             {
@@ -108,14 +177,24 @@ class StoragePolicy:
         the chat loop.
         """
 
-        prompt = CLASSIFIER_PROMPT.format(message=message)
+        default = {"facts": []}
+
+        # Deterministic fast-path: skip the LLM entirely for bare
+        # questions. Cheaper, and immune to the model ignoring its
+        # instructions -- there is no LLM call left to misbehave.
+        if self._looks_like_bare_question(message):
+            print(f"[StoragePolicy] bare question detected, skipping classification: {message!r}")
+            return default
+
+        prompt = CLASSIFIER_PROMPT.format(
+            message=message,
+            history=history if history.strip() else "(no prior context)"
+        )
 
         messages = [
             {"role": "system", "content": "You output only valid JSON, nothing else."},
             {"role": "user", "content": prompt}
         ]
-
-        default = {"facts": []}
 
         try:
             # format="json" + temperature=0: constrains the model to emit
