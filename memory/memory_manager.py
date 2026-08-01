@@ -230,3 +230,45 @@ class MemoryManager:
             )
 
             return memory_id
+
+    def store_plan(self, content: str):
+        """
+        Stores a generated "tomorrow's plan" explicitly.
+
+        Same pattern as store_journal(): this is an explicit user save
+        action (clicking "Save Plan"), not mined from conversation, so
+        it bypasses the StoragePolicy classifier and writes directly.
+
+        Returns:
+            memory_id if stored successfully.
+            None if an identical plan already exists.
+        """
+
+        content = content.strip()
+
+        if not content:
+            return None
+
+        # Prevent duplicate plan entries
+        if self.sqlite_store.memory_exists(content):
+            print("Plan already exists. Skipping storage.")
+            return None
+
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        memory_id = self.sqlite_store.add_memory(
+            content=content,
+            category="plan",
+            created_at=created_at
+        )
+
+        self.chroma_store.add_memory(
+            memory_id=str(memory_id),
+            text=content,
+            metadata={
+                "category": "plan",
+                "created_at": created_at
+            }
+        )
+
+        return memory_id

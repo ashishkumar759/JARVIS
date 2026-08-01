@@ -226,6 +226,58 @@ class SQLiteStore:
                 "created_at": row[3]
             }
 
+    def get_memories_by_category(self, category, limit=None):
+        """
+        Returns memories of a single category, most recent first.
+
+        Added for the Journal page's "Generate Tomorrow's Plan"
+        feature, so it can pull recent journal history directly
+        instead of loading every memory ever stored via
+        get_all_memories() and filtering in Python. Returns a list of
+        dicts (same shape as get_memory()) since these are consumed
+        directly by prompt-building code, not a UI table row.
+
+        Args:
+            category: exact category string to match (e.g. "journal").
+            limit: optional max number of rows to return. If None,
+                returns every memory in that category.
+        """
+
+        with self._get_connection() as conn:
+
+            cursor = conn.cursor()
+
+            query = """
+                SELECT
+                    id,
+                    content,
+                    category,
+                    created_at
+                FROM memories
+                WHERE category = ?
+                ORDER BY created_at DESC
+            """
+
+            params = [category]
+
+            if limit is not None:
+                query += " LIMIT ?"
+                params.append(limit)
+
+            cursor.execute(query, params)
+
+            rows = cursor.fetchall()
+
+            return [
+                {
+                    "id": row[0],
+                    "content": row[1],
+                    "category": row[2],
+                    "created_at": row[3]
+                }
+                for row in rows
+            ]
+
     # ==========================================================
     # Close
     # ==========================================================
