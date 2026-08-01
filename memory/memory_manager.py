@@ -161,6 +161,32 @@ class MemoryManager:
 
         return stored_ids
 
+    def delete_memory(self, memory_id) -> bool:
+        """
+        Permanently deletes one memory from every store, so it stops
+        showing up in the Memory Browser AND stops being retrievable
+        as semantic context for chat.
+
+        Returns True if a memory with this id existed in SQLite (the
+        source of truth for what the UI lists), False otherwise.
+
+        Chroma is always asked to delete the same id too, even if the
+        SQLite row was already gone -- this guarantees no leftover
+        embedding can keep surfacing a "deleted" memory in semantic
+        search results.
+        """
+
+        memory_id = int(memory_id)
+
+        existed = self.sqlite_store.delete_memory(memory_id)
+
+        try:
+            self.chroma_store.delete_memory(str(memory_id))
+        except Exception as error:
+            print(f"Warning: failed to remove memory {memory_id} from Chroma: {error}")
+
+        return existed
+
     def store_journal(self, content: str):
             """
             Stores a journal entry explicitly.

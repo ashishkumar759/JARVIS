@@ -75,6 +75,18 @@ class ChromaStore:
             metadatas=[metadata]
         )
 
+    def delete_memory(self, memory_id: str):
+        """
+        Removes a single memory's embedding from ChromaDB.
+
+        Chroma's delete() does not raise if the id is already
+        missing, so callers don't need to check existence first --
+        this is safe to call defensively even for an id that may
+        never have made it into Chroma.
+        """
+
+        self.collection.delete(ids=[str(memory_id)])
+
     def search(self, query: str, top_k: int = 5):
         """
         Perform semantic search.

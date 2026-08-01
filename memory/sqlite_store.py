@@ -131,6 +131,33 @@ class SQLiteStore:
             conn.commit()
 
     # ==========================================================
+    # Delete Memory
+    # ==========================================================
+
+    def delete_memory(self, memory_id):
+        """
+        Permanently deletes a single memory row by id.
+
+        Returns True if a row was deleted, False if no memory with
+        that id existed (e.g. already deleted). Callers can use this
+        to decide whether the id was real before also asking Chroma
+        to drop the matching embedding.
+        """
+
+        with self._get_connection() as conn:
+
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                DELETE FROM memories
+                WHERE id = ?
+            """, (memory_id,))
+
+            conn.commit()
+
+            return cursor.rowcount > 0
+
+    # ==========================================================
     # Duplicate Detection
     # ==========================================================
 

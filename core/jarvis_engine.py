@@ -185,6 +185,23 @@ class JarvisEngine(QObject):
 
         return self.memory_manager.sqlite_store.get_all_memories()
 
+    def delete_memory(self, memory_id):
+        """
+        Permanently deletes a single memory (used by the Memory
+        Browser's per-item delete button). Removes it from both the
+        structured store and the semantic store, so it can never
+        resurface in the browser or in retrieved chat context.
+
+        Returns True if the memory existed and was deleted.
+        """
+
+        deleted = self.memory_manager.delete_memory(memory_id)
+
+        if deleted:
+            self.memory_updated.emit()
+
+        return deleted
+
     # ==========================================================
     # Conversation API
     # ==========================================================
