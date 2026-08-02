@@ -20,6 +20,11 @@ class ToolActions:
     READ = "read"
 
     WRITE = "write"
+    RENAME = "rename"
+    COPY = "copy"
+    MOVE = "move"
+
+
 
 
 class ToolErrors:
@@ -41,3 +46,9 @@ class ToolErrors:
 
     MISSING_PARAMETER = "MissingParameter"
     INVALID_PARAMETERS = "InvalidParameters"
+
+    FILE_NOT_FOUND = "FileNotFound"
+    FILE_ALREADY_EXISTS = "FileAlreadyExists"
+    INVALID_PATH = "InvalidPath"
+    NOT_A_FILE = "NotAFile"
+    PERMISSION_DENIED = "PermissionDenied"

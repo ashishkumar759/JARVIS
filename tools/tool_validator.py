@@ -36,11 +36,11 @@ class ToolValidator:
         Ensure a required parameter exists.
         """
 
-        if not parameters.get(parameter_name):
+        if parameter_name not in parameters or parameters[parameter_name] is None:
             return ToolResult(
                 success=False,
                 message=f"Missing required parameter '{parameter_name}'.",
-                error=ToolErrors.MISSING_TARGET
+                error=ToolErrors.MISSING_PARAMETER
             )
 
         return None
