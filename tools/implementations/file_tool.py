@@ -18,7 +18,7 @@ class FileTool(BaseTool):
         return ToolMetadata(
             name="file",
             description="Read, create, write, delete, rename, copy and move local files.",
-            supported_actions=[
+            supported_actions=(
                 ToolActions.READ,
                 ToolActions.CREATE,
                 ToolActions.WRITE,
@@ -26,19 +26,19 @@ class FileTool(BaseTool):
                 ToolActions.RENAME,
                 ToolActions.COPY,
                 ToolActions.MOVE,
-            ],
-            tags=[
+            ),
+            tags=(
                 "filesystem",
                 "files",
                 "local",
-            ],
+            ),
         )
 
     def execute(self, action: str, parameters: dict) -> ToolResult:
 
         validation = ToolValidator.validate_action(
+            self,
             action,
-            self.metadata.supported_actions,
         )
 
         if validation:

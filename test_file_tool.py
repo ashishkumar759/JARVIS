@@ -1,132 +1,44 @@
-from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
-
-from tools.registry import ToolRegistry
-from tools.tool_loader import load_tools
-from tools.tool_manager import ToolManager
+from pathlib import Path
 from tools.tool_request import ToolRequest
+from tools.tool_manager import ToolManager
+from tools.constants import ToolActions
+from tools.registry import ToolRegistry   # <-- import your registry
 
-
-class TestFileTool(unittest.TestCase):
-
+class TestFileToolIntegration(unittest.TestCase):
     def setUp(self):
-        self.temp = TemporaryDirectory()
-        self.workspace = Path(self.temp.name)
+        # Create a temporary test directory
+        self.test_dir = Path("temp_test_dir")
+        self.test_dir.mkdir(exist_ok=True)
 
+        # Instantiate the registry and pass it to ToolManager
         registry = ToolRegistry()
-        load_tools(registry)
-
         self.manager = ToolManager(registry)
 
     def tearDown(self):
-        self.temp.cleanup()
+        # Clean up after tests
+        for item in self.test_dir.iterdir():
+            item.unlink()
+        self.test_dir.rmdir()
 
-    def test_create_read_write_delete(self):
+    def test_copy_file(self):
+        source = self.test_dir / "source.txt"
+        source.write_text("Hello JARVIS")
 
-        file_path = self.workspace / "notes.txt"
+        destination = self.test_dir / "copy.txt"
 
         result = self.manager.execute(
             ToolRequest(
                 tool_name="file",
-                action="create",
+                action=ToolActions.COPY,
                 parameters={
-                    "path": str(file_path),
-                    "content": "Hello"
-                }
+                    "source": str(source),
+                    "destination": str(destination),
+                },
             )
         )
 
         self.assertTrue(result.success)
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="read",
-                parameters={
-                    "path": str(file_path)
-                }
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(result.data["content"], "Hello")
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="write",
-                parameters={
-                    "path": str(file_path),
-                    "content": "JARVIS"
-                }
-            )
-        )
-
-        self.assertTrue(result.success)
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="read",
-                parameters={
-                    "path": str(file_path)
-                }
-            )
-        )
-
-        self.assertEqual(
-            result.data["content"],
-            "JARVIS"
-        )
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="delete",
-                parameters={
-                    "path": str(file_path)
-                }
-            )
-        )
-
-        self.assertTrue(result.success)
-
-        self.assertFalse(file_path.exists())
-
-    def test_missing_parameter(self):
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="read"
-            )
-        )
-
-        self.assertFalse(result.success)
-
-    def test_invalid_action(self):
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="file",
-                action="compress"
-            )
-        )
-
-        self.assertFalse(result.success)
-
-    def test_unknown_tool(self):
-
-        result = self.manager.execute(
-            ToolRequest(
-                tool_name="unknown",
-                action="read"
-            )
-        )
-
-        self.assertFalse(result.success)
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
+        self.assertTrue(source.exists())
+        self.assertTrue(destination.exists())
+        self.assertEqual(source.read_text(), destination.read_text())

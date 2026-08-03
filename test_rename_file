@@ -1,0 +1,46 @@
+import unittest
+from pathlib import Path
+from tools.tool_request import ToolRequest
+from tools.tool_manager import ToolManager
+from tools.constants import ToolActions
+
+class TestFileToolIntegration(unittest.TestCase):
+    def setUp(self):
+        self.manager = ToolManager()
+        # Root folder path (adjust if needed)
+        self.root = Path(".")
+        self.source = self.root / "before.txt"
+        self.destination = self.root / "after.txt"
+
+    def tearDown(self):
+        # Clean up after test
+        if self.destination.exists():
+            self.destination.unlink()
+        # Optionally recreate before.txt if you want it back
+        if not self.source.exists():
+            self.source.write_text("Hello JARVIS")
+
+    def test_rename_file(self):
+        # Ensure source exists before running
+        self.assertTrue(self.source.exists(), "before.txt must exist in root folder")
+
+        # Execute rename via ToolManager
+        request = ToolRequest(
+            tool_name="file",
+            action=ToolActions.RENAME,
+            parameters={
+                "path": str(self.source),
+                "new_name": "after.txt"
+            }
+        )
+        result = self.manager.execute(request)
+
+        # Validate ToolResult
+        self.assertTrue(result.success)
+
+        # Validate filesystem
+        self.assertFalse(self.source.exists())
+        self.assertTrue(self.destination.exists())
+
+        # Validate content
+        self.assertEqual(self.destination.read_text(), "Hello JARVIS")
